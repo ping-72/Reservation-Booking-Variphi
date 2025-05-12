@@ -1,0 +1,761 @@
+{
+  "info": {
+    "_postman_id": "97e56a93-9b34-4a78-9a62-1a8feb12cfb3",
+    "name": "Flight Reservation System",
+    "description": "Collection for testing the flight reservation microservices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "User - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/register",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Admin\",\n    \"lastName\": \"User\",\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\",\n    \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/register",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new admin user"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set(\"AUTH_TOKEN\", jsonData.token);",
+                  "    console.log(\"Token saved to environment\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/login",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login and get a JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set(\"ADMIN_TOKEN\", jsonData.token);",
+                  "    console.log(\"Admin token saved to environment\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/login",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login as admin and get a JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/me",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get the current user's profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{AUTH_URL}}/api/auth/verify",
+              "host": ["{{AUTH_URL}}"],
+              "path": ["api", "auth", "verify"]
+            },
+            "description": "Verify if the token is valid"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication and user management endpoints"
+    },
+    {
+      "name": "Ticket Service",
+      "item": [
+        {
+          "name": "Get All Tickets (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets"]
+            },
+            "description": "Get all tickets (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Tickets (User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets"]
+            },
+            "description": "Get all tickets (as a regular user)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Tickets - Origin/Destination",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/search?origin=Dubai&destination=Singapore",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "search"],
+              "query": [
+                {
+                  "key": "origin",
+                  "value": "Dubai"
+                },
+                {
+                  "key": "destination",
+                  "value": "Singapore"
+                }
+              ]
+            },
+            "description": "Search for tickets by origin and destination"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Tickets - Date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/search?departureDate=2024-06-20",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "search"],
+              "query": [
+                {
+                  "key": "departureDate",
+                  "value": "2024-06-20"
+                }
+              ]
+            },
+            "description": "Search for tickets by departure date"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Tickets - Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/search?class=Business",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "search"],
+              "query": [
+                {
+                  "key": "class",
+                  "value": "Business"
+                }
+              ]
+            },
+            "description": "Search for tickets by class (Economy, Business, etc.)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/10d018c5-3121-4561-9a68-789fe0ce0d42",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "10d018c5-3121-4561-9a68-789fe0ce0d42"]
+            },
+            "description": "Get a specific ticket by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Airlines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/airlines",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "airlines"]
+            },
+            "description": "Get a list of all available airlines"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Popular Routes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{TICKET_URL}}/api/tickets/popular-routes",
+              "host": ["{{TICKET_URL}}"],
+              "path": ["api", "tickets", "popular-routes"]
+            },
+            "description": "Get the most popular origin-destination pairs"
+          },
+          "response": []
+        }
+      ],
+      "description": "Flight ticket management endpoints"
+    },
+    {
+      "name": "Reservation Service",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"ticketId\": \"10d018c5-3121-4561-9a68-789fe0ce0d42\",\n    \"passengerName\": \"Jane Smith\",\n    \"passengerEmail\": \"jane.smith@example.com\",\n    \"passengerPhone\": \"+1-555-123-4567\",\n    \"seatNumber\": \"12A\",\n    \"notes\": \"Vegetarian meal\"\n}"
+            },
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations"]
+            },
+            "description": "Create a new flight reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/my-reservations",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "my-reservations"]
+            },
+            "description": "Get all reservations for the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Reservations (User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations"]
+            },
+            "description": "Get all reservations (user can only see their own)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Reservations (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/admin/all",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "admin", "all"]
+            },
+            "description": "Get all reservations across all users (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservations by Ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/ticket/10d018c5-3121-4561-9a68-789fe0ce0d42",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": [
+                "api",
+                "reservations",
+                "ticket",
+                "10d018c5-3121-4561-9a68-789fe0ce0d42"
+              ]
+            },
+            "description": "Get all reservations for a specific ticket (user can only see their own)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/{{RESERVATION_ID}}",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "{{RESERVATION_ID}}"]
+            },
+            "description": "Get a specific reservation by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"passengerName\": \"Jane Smith-Brown\",\n    \"seatNumber\": \"15F\",\n    \"notes\": \"Vegetarian meal and extra legroom\"\n}"
+            },
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/{{RESERVATION_ID}}",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "{{RESERVATION_ID}}"]
+            },
+            "description": "Update an existing reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"cancelled\",\n    \"notes\": \"Customer cancelled due to schedule change\"\n}"
+            },
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/{{RESERVATION_ID}}",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "{{RESERVATION_ID}}"]
+            },
+            "description": "Cancel a reservation by changing its status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{RESERVATION_URL}}/api/reservations/{{RESERVATION_ID}}",
+              "host": ["{{RESERVATION_URL}}"],
+              "path": ["api", "reservations", "{{RESERVATION_ID}}"]
+            },
+            "description": "Delete a reservation (permanently remove from the database)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Flight reservation management endpoints"
+    },
+    {
+      "name": "Payment Service",
+      "item": [
+        {
+          "name": "Create Payment Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reservationId\": \"{{RESERVATION_ID}}\"\n}"
+            },
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/create-order",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "create-order"]
+            },
+            "description": "Create a new payment order for a reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"razorpayOrderId\": \"{{RAZORPAY_ORDER_ID}}\",\n    \"razorpayPaymentId\": \"{{RAZORPAY_PAYMENT_ID}}\",\n    \"razorpaySignature\": \"{{RAZORPAY_SIGNATURE}}\",\n    \"reservationId\": \"{{RESERVATION_ID}}\"\n}"
+            },
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/verify",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "verify"]
+            },
+            "description": "Verify a completed payment"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/my-payments",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "my-payments"]
+            },
+            "description": "Get all payments for the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/{{PAYMENT_ID}}",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "{{PAYMENT_ID}}"]
+            },
+            "description": "Get a specific payment by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payments for Reservation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/reservation/{{RESERVATION_ID}}",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "reservation", "{{RESERVATION_ID}}"]
+            },
+            "description": "Get all payments for a specific reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{PAYMENT_URL}}/api/payments/admin/all",
+              "host": ["{{PAYMENT_URL}}"],
+              "path": ["api", "payments", "admin", "all"]
+            },
+            "description": "Get all payments (admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Payment processing with Razorpay integration"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "AUTH_URL",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "TICKET_URL",
+      "value": "http://localhost:5003",
+      "type": "string"
+    },
+    {
+      "key": "RESERVATION_URL",
+      "value": "http://localhost:5002",
+      "type": "string"
+    },
+    {
+      "key": "PAYMENT_URL",
+      "value": "http://localhost:5004",
+      "type": "string"
+    },
+    {
+      "key": "RESERVATION_ID",
+      "value": "replace-with-real-reservation-id",
+      "type": "string"
+    },
+    {
+      "key": "PAYMENT_ID",
+      "value": "replace-with-real-payment-id",
+      "type": "string"
+    },
+    {
+      "key": "RAZORPAY_ORDER_ID",
+      "value": "replace-with-real-order-id",
+      "type": "string"
+    },
+    {
+      "key": "RAZORPAY_PAYMENT_ID",
+      "value": "replace-with-real-payment-id",
+      "type": "string"
+    },
+    {
+      "key": "RAZORPAY_SIGNATURE",
+      "value": "replace-with-real-signature",
+      "type": "string"
+    }
+  ]
+}

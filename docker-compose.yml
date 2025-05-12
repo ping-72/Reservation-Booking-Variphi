@@ -1,0 +1,185 @@
+version: "3.8"
+
+services:
+  # Database services
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flight_booking
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - flight-booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend microservices
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    hostname: auth-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=auth_db
+      - JWT_SECRET=flight_booking_secret_key
+      - JWT_EXPIRATION=24h
+    networks:
+      - flight-booking-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "chmod +x /wait-for-it.sh && /wait-for-it.sh postgres 5432 && npm run migrate && npm start"
+
+  ticket-service:
+    build: ./ticket-service
+    container_name: ticket-service
+    hostname: ticket-service
+    ports:
+      - "5003:5003"
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - NODE_ENV=development
+      - PORT=5003
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=ticket_db
+      - JWT_SECRET=flight_booking_secret_key
+      - AUTH_SERVICE_URL=http://auth-service:5000
+    networks:
+      - flight-booking-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    command: >
+      sh -c "chmod +x /wait-for-it.sh && /wait-for-it.sh postgres 5432 && 
+             /wait-for-it.sh auth-service 5000 && 
+             npm run migrate && 
+             npm start"
+
+  reservation-service:
+    build: ./reservation-service
+    container_name: reservation-service
+    hostname: reservation-service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - NODE_ENV=development
+      - PORT=5002
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=reservation_db
+      - JWT_SECRET=flight_booking_secret_key
+      - TICKET_SERVICE_URL=http://ticket-service:5003
+      - AUTH_SERVICE_URL=http://auth-service:5000
+    networks:
+      - flight-booking-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      ticket-service:
+        condition: service_started
+    command: >
+      sh -c "chmod +x /wait-for-it.sh && 
+             /wait-for-it.sh postgres 5432 && 
+             /wait-for-it.sh auth-service 5000 && 
+             sleep 15 &&
+             npm run migrate && 
+             npm start"
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    hostname: payment-service
+    ports:
+      - "5004:5004"
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - NODE_ENV=development
+      - PORT=5004
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=payment_db
+      - JWT_SECRET=flight_booking_secret_key
+      - RAZORPAY_KEY_ID=rzp_test_DBN8MnMAPEImKD
+      - RAZORPAY_KEY_SECRET=3FRwtRB9rP1sdoayb4fknITc
+      - RESERVATION_SERVICE_URL=http://reservation-service:5002
+      - TICKET_SERVICE_URL=http://ticket-service:5003
+      - AUTH_SERVICE_URL=http://auth-service:5000
+      - SSL_ENABLED=false
+    networks:
+      - flight-booking-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      reservation-service:
+        condition: service_started
+    command: >
+      sh -c "chmod +x /wait-for-it.sh && 
+             /wait-for-it.sh postgres 5432 && 
+             /wait-for-it.sh auth-service 5000 && 
+             sleep 20 &&
+             npm run migrate && 
+             npm start"
+
+  # Frontend service
+  frontend-service:
+    build: ./frontend-service
+    container_name: frontend-service
+    hostname: frontend-service
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_AUTH_SERVICE_URL=http://localhost:5000
+      - VITE_TICKET_SERVICE_URL=http://localhost:5003
+      - VITE_RESERVATION_SERVICE_URL=http://localhost:5002
+      - VITE_PAYMENT_SERVICE_URL=http://localhost:5004
+    networks:
+      - flight-booking-network
+    depends_on:
+      - auth-service
+      - ticket-service
+      - reservation-service
+      - payment-service
+
+volumes:
+  postgres_data:
+
+networks:
+  flight-booking-network:
+    driver: bridge
+    name: flight-booking-network
