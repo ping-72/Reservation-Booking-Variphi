@@ -22,6 +22,35 @@ services:
       timeout: 5s
       retries: 5
 
+  # API Gateway service
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    hostname: api-gateway
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - NODE_ENV=development
+      - PORT=5001
+      - AUTH_SERVICE_URL=http://auth-service:5000
+      - TICKET_SERVICE_URL=http://ticket-service:5003
+      - RESERVATION_SERVICE_URL=http://reservation-service:5002
+      - PAYMENT_SERVICE_URL=http://payment-service:5004
+      - JWT_SECRET=flight_booking_secret_key
+    networks:
+      - flight-booking-network
+    depends_on:
+      - auth-service
+      - ticket-service
+      - reservation-service
+      - payment-service
+    command: >
+      sh -c "chmod +x /wait-for-it.sh && 
+             /wait-for-it.sh auth-service 5000 && 
+             npm start"
+
   # Backend microservices
   auth-service:
     build: ./auth-service
@@ -164,17 +193,11 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_AUTH_SERVICE_URL=http://localhost:5000
-      - VITE_TICKET_SERVICE_URL=http://localhost:5003
-      - VITE_RESERVATION_SERVICE_URL=http://localhost:5002
-      - VITE_PAYMENT_SERVICE_URL=http://localhost:5004
+      - VITE_API_GATEWAY_URL=http://localhost:5001/api
     networks:
       - flight-booking-network
     depends_on:
-      - auth-service
-      - ticket-service
-      - reservation-service
-      - payment-service
+      - api-gateway
 
 volumes:
   postgres_data:

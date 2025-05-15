@@ -6,11 +6,12 @@ This project implements a flight reservation system with microservices architect
 
 The system consists of the following microservices:
 
-1. **Auth Service** (Port 5000): Handles user authentication and authorization
-2. **Ticket Service** (Port 5003): Manages flight tickets and search functionality
-3. **Reservation Service** (Port 5002): Handles flight reservations
-4. **Payment Service** (Port 5004): Processes payments via Razorpay
-5. **Frontend Service** (Port 5173): React application for the user interface
+1. **API Gateway** (Port 5001): Single entry point for all client requests
+2. **Auth Service** (Port 5000): Handles user authentication and authorization
+3. **Ticket Service** (Port 5003): Manages flight tickets and search functionality
+4. **Reservation Service** (Port 5002): Handles flight reservations
+5. **Payment Service** (Port 5004): Processes payments via Razorpay
+6. **Frontend Service** (Port 5173): React application for the user interface
 
 ## Getting Started with Docker
 
@@ -42,6 +43,7 @@ The system consists of the following microservices:
 
 4. Access the application:
    - Frontend: http://localhost:5173
+   - API Gateway: http://localhost:5001
    - Auth Service API: http://localhost:5000
    - Reservation Service API: http://localhost:5002
    - Ticket Service API: http://localhost:5003
@@ -58,6 +60,23 @@ To remove volumes as well:
 ```
 docker-compose down -v
 ```
+
+## API Gateway
+
+The API Gateway serves as a single entry point to all backend services. It handles:
+
+- Request routing to the appropriate microservice
+- Authentication and authorization
+- Request/response transformation
+- Rate limiting (in production)
+- Logging and monitoring
+
+All client applications should connect to the API Gateway instead of individual services:
+
+- Authentication: http://localhost:5001/api/auth
+- Flight Tickets: http://localhost:5001/api/ticket
+- Reservations: http://localhost:5001/api/reservation
+- Payments: http://localhost:5001/api/payment
 
 ## Development
 
