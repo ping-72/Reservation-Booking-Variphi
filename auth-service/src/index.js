@@ -7,6 +7,7 @@ const { sequelize } = require("./config/database");
 const authRoutes = require("./routes/auth.routes");
 const logger = require("./middleware/logger.middleware");
 const { errorHandler } = require("./middleware/error.middleware");
+const { register, login } = require("./controllers/auth.controller");
 
 // Log environment variables (without sensitive values)
 console.log("Environment variables loaded:", {
@@ -25,6 +26,10 @@ app.use(logger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+
+// Additional routes to handle API Gateway requests at /users/login and /users/register
+app.post("/users/login", login);
+app.post("/users/register", register);
 
 // Health check route
 app.get("/api/health", (req, res) => {

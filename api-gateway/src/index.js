@@ -14,12 +14,38 @@ const paymentRoutes = require("./routes/payment.routes");
 const app = express();
 
 // Apply middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Cross-origin resource sharing
-app.use(express.json()); // Parse JSON request body
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request body
+app.use(
+  helmet({
+    // Disable contentSecurityPolicy for development
+    contentSecurityPolicy: config.environment === "production",
+  })
+);
 
-// Logging
+// Configure CORS to allow all origins in development
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// Parse JSON request body with increased limit
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Logging middleware with request body for development
+app.use((req, res, next) => {
+  if (config.environment === "development") {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (req.body && Object.keys(req.body).length > 0) {
+      console.log("Request Body:", JSON.stringify(req.body, null, 2));
+    }
+  }
+  next();
+});
+
+// Standard logging
 app.use(morgan(config.environment === "development" ? "dev" : "combined"));
 
 // API Routes
@@ -42,9 +68,24 @@ app.get("/", (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "up",
+    timestamp: new Date().toISOString(),
+    services: {
+      auth: config.services.auth,
+      ticket: config.services.ticket,
+      reservation: config.services.reservation,
+      payment: config.services.payment,
+    },
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(`Error: ${err.message}`);
+  console.error(err.stack);
 
   res.status(err.status || 500).json({
     status: "error",
@@ -55,9 +96,10 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
+  console.log(`Route not found: ${req.method} ${req.url}`);
   res.status(404).json({
     status: "error",
-    message: "Route not found",
+    message: `Route not found: ${req.method} ${req.url}`,
   });
 });
 
